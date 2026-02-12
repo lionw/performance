@@ -48,7 +48,7 @@
 }
 ```
 
-### 2. 运行程序
+### 2. 运行程序 (Windows)
 
 ```bash
 go run main.go
@@ -60,6 +60,40 @@ go run main.go
 go build -o monitor.exe main.go
 ./monitor.exe
 ```
+
+### 3. Linux 环境部署
+
+#### 交叉编译（在 Windows 上编译 Linux 可执行文件）
+
+打开 CMD 或 PowerShell：
+
+```bash
+# CMD
+set GOOS=linux
+set GOARCH=amd64
+go build -o monitor main.go
+
+# PowerShell
+$env:GOOS="linux"
+$env:GOARCH="amd64"
+go build -o monitor main.go
+```
+
+#### 在 Linux 上运行
+
+1. 将编译好的 `monitor` 文件和 `config.json` 上传到服务器同级目录。
+2. 赋予执行权限：
+   ```bash
+   chmod +x monitor
+   ```
+3. 运行程序：
+   ```bash
+   # 前台运行
+   ./monitor
+
+   # 后台运行 (推荐)
+   nohup ./monitor > /dev/null 2>&1 &
+   ```
 
 ## 日志说明
 
