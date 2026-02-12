@@ -10,3 +10,4 @@
 main
 main.exe
 config.json
+logs/*

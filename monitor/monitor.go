@@ -107,21 +107,50 @@ func getLocalIP() string {
 	return "Unknown"
 }
 
+func writeLog(msg string) {
+	// Ensure logs directory exists
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		_ = os.Mkdir("logs", 0755)
+	}
+
+	filename := fmt.Sprintf("logs/%s.log", time.Now().Format("2006-01-02"))
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Printf("Error opening log file: %v\n", err)
+		return
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(msg); err != nil {
+		fmt.Printf("Error writing to log file: %v\n", err)
+	}
+}
+
 func checkAndAlert() {
 	if !isTimeInWindow(config.AlertStartTime, config.AlertEndTime) {
 		fmt.Println("Current time is outside alerting window. Skipping check.")
 		return
 	}
 
+	nowStr := time.Now().Format("2006-01-02 15:04:05")
+	ip := getLocalIP()
+	logHeader := fmt.Sprintf("[%s] IP: %s\n", nowStr, ip)
+
 	var alertMsg string
+	var fullLog string
 
 	// CPU Usage
 	percent, err := cpu.Percent(time.Second, false)
 	if err != nil {
-		fmt.Printf("Error getting CPU percent: %v\n", err)
+		msg := fmt.Sprintf("Error getting CPU percent: %v\n", err)
+		fmt.Print(msg)
+		fullLog += msg
 	} else if len(percent) > 0 {
 		val := percent[0]
-		fmt.Printf("CPU Usage: %.2f%%\n", val)
+		msg := fmt.Sprintf("CPU Usage: %.2f%%\n", val)
+		fmt.Print(msg)
+		fullLog += msg
+
 		if val > config.CpuThreshold {
 			alertMsg += fmt.Sprintf("CPU Usage High: %.2f%% (Threshold: %.2f%%)\n", val, config.CpuThreshold)
 		}
@@ -130,13 +159,18 @@ func checkAndAlert() {
 	// Memory Usage
 	v, err := mem.VirtualMemory()
 	if err != nil {
-		fmt.Printf("Error getting virtual memory: %v\n", err)
+		msg := fmt.Sprintf("Error getting virtual memory: %v\n", err)
+		fmt.Print(msg)
+		fullLog += msg
 	} else {
 		totalGB := float64(v.Total) / 1024 / 1024 / 1024
 		usedGB := float64(v.Used) / 1024 / 1024 / 1024
 		availableGB := float64(v.Available) / 1024 / 1024 / 1024
 
-		fmt.Printf("Memory Usage: %.2f%% (Total: %.2f GB, Used: %.2f GB, Available: %.2f GB)\n", v.UsedPercent, totalGB, usedGB, availableGB)
+		msg := fmt.Sprintf("Memory Usage: %.2f%% (Total: %.2f GB, Used: %.2f GB, Available: %.2f GB)\n", v.UsedPercent, totalGB, usedGB, availableGB)
+		fmt.Print(msg)
+		fullLog += msg
+
 		if v.UsedPercent > config.MemThreshold {
 			alertMsg += fmt.Sprintf("Memory Usage High: %.2f%% (Threshold: %.2f%%, Total: %.2f GB, Used: %.2f GB, Available: %.2f GB)\n", v.UsedPercent, config.MemThreshold, totalGB, usedGB, availableGB)
 		}
@@ -149,22 +183,28 @@ func checkAndAlert() {
 	}
 	usage, err := disk.Usage(path)
 	if err != nil {
-		fmt.Printf("Error getting disk usage: %v\n", err)
+		msg := fmt.Sprintf("Error getting disk usage: %v\n", err)
+		fmt.Print(msg)
+		fullLog += msg
 	} else {
 		totalGB := float64(usage.Total) / 1024 / 1024 / 1024
 		usedGB := float64(usage.Used) / 1024 / 1024 / 1024
 		freeGB := float64(usage.Free) / 1024 / 1024 / 1024
 
-		fmt.Printf("Disk Usage (%s): %.2f%% (Total: %.2f GB, Used: %.2f GB, Free: %.2f GB)\n", path, usage.UsedPercent, totalGB, usedGB, freeGB)
+		msg := fmt.Sprintf("Disk Usage (%s): %.2f%% (Total: %.2f GB, Used: %.2f GB, Free: %.2f GB)\n", path, usage.UsedPercent, totalGB, usedGB, freeGB)
+		fmt.Print(msg)
+		fullLog += msg
+
 		if usage.UsedPercent > config.DiskThreshold {
 			alertMsg += fmt.Sprintf("Disk Usage High (%s): %.2f%% (Threshold: %.2f%%, Total: %.2f GB, Used: %.2f GB, Free: %.2f GB)\n", path, usage.UsedPercent, config.DiskThreshold, totalGB, usedGB, freeGB)
 		}
 	}
 
+	// Write to log
+	writeLog(logHeader + fullLog + "----------------------------------------\n")
+
 	// Send Alert if needed
 	if alertMsg != "" {
-		nowStr := time.Now().Format("2006-01-02 15:04:05")
-		ip := getLocalIP()
 		header := fmt.Sprintf("Time: %s\nIP: %s\n", nowStr, ip)
 		finalMsg := header + alertMsg
 
