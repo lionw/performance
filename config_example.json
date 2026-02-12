@@ -1,0 +1,13 @@
+{
+    "dingtalk_access_token": "xxxxxxxxxxxxx",
+    "at_mobiles": [
+        "13xxxxxxxxx"
+    ],
+    "check_interval_seconds": 60,
+    "enable_check": true,
+    "cpu_threshold": 90.0,
+    "mem_threshold": 90.0,
+    "disk_threshold": 90.0,
+    "alert_start_time": "09:00",
+    "alert_end_time": "18:00"
+}
