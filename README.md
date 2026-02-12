@@ -1,5 +1,7 @@
 # 系统监控报警工具 (System Monitor Tool)
 
+A lightweight, cross-platform server monitoring tool written in Go (Golang). Monitors CPU, Memory, and Disk usage in real-time and sends DingTalk (钉钉) alerts when configurable thresholds are exceeded. Features include custom check intervals, alert time windows, and local file logging.
+
 这是一个基于 Go 语言开发的轻量级服务器系统监控工具。它可以定期检查服务器的 CPU、内存和磁盘使用情况，并在指标超过设定阈值时通过钉钉发送报警通知。同时支持将检查结果记录到本地日志文件。
 
 ## 主要功能
@@ -117,3 +119,9 @@ Time: 2026-02-12 14:00:01
 IP: 192.168.1.100
 Memory Usage High: 92.50% (Threshold: 90.00%, Total: 32.00 GB, Used: 29.60 GB, Available: 2.40 GB)
 ```
+
+## Topics
+
+Copy and paste these tags into the "Topics" section of your repository to improve SEO:
+
+`golang` `go` `system-monitor` `server-monitoring` `dingtalk-alert` `ops` `devops` `cpu-usage` `memory-usage` `disk-usage` `alerting` `cross-platform` `windows` `linux` `logging` `threshold-monitoring`
